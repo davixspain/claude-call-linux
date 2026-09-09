@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+logs/
+aecbridge
+.DS_Store
+transcripts/
+whisper.cpp/
