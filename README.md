@@ -11,8 +11,33 @@ Fork of [caiovicentino/claude-call](https://github.com/caiovicentino/claude-call
   - `CALL_MAX_PER_HOUR` (default `20`) — hard rate-limit on brain invocations. A false wake-word trigger from background noise can otherwise loop unattended and burn real API credit.
   - `CALL_MAX_SPOKEN_CHARS` (default `260`) — hard-truncates a turn's spoken reply *and cancels the underlying generation* once hit, instead of letting the model read out a full markdown list because it ignored the "keep it short" instruction.
 - **A real Italian voice pack.** Upstream only had `en`/`pt` voice-call system prompts; `CALL_LANG=it` silently fell back to English. Added a proper Italian one (and fixed a hardcoded-Portuguese reminder string in hook mode that ignored `CALL_LANG` entirely).
+- **A systemd `--user` service** ([`systemd/claude-call.service`](./systemd/claude-call.service)) so assistant mode (wake-word, always listening) survives logout/reboot instead of dying with your terminal. Confirmed this matters: launching it from an SSH shell or a backgrounded `nohup` silently breaks mic access (`XDG_RUNTIME_DIR` isn't set outside a real user session, so PipeWire never connects) — a real systemd user service gets that environment for free.
 
 Everything else — the architecture, the install script, the session-resuming daemon, the cost model — is upstream's. Read **their** README for that: https://github.com/caiovicentino/claude-call
+
+## Always-on (systemd)
+
+```bash
+mkdir -p ~/.config/systemd/user
+cp systemd/claude-call.service ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now claude-call.service
+systemctl --user status claude-call.service   # confirm it's actually listening
+```
+
+## Picking a wake word (if your language isn't English)
+
+Whisper transcribes a foreign name inconsistently when spoken in a non-English sentence —
+in testing, `CALL_NAME=Claude` came back as "Cloud", "Proud", or garbage about half the
+time when spoken in Italian, and `Jarvis` came back as "Giarvis" (the Italian "gi" for
+the English "j" sound) often enough to make the fuzzy wake-word matcher miss it. Neither
+is a config bug — whisper-small just isn't reliable on transliterated foreign names.
+
+**Pick a wake word that's spelled and pronounced the same in your language**, e.g.
+`CALL_NAME=Computer` — worked reliably in Italian in testing, no alias workarounds needed.
+If you're stuck with a name that keeps getting mistranscribed, `CALL_WAKE=name1,name2,...`
+takes a comma-separated list of accepted mishearings as a stopgap, but changing the word
+itself is the real fix.
 
 ## Install
 

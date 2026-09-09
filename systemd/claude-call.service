@@ -1,0 +1,21 @@
+# Always-on wake-word assistant mode as a systemd --user service.
+# Install: mkdir -p ~/.config/systemd/user && cp claude-call.service ~/.config/systemd/user/
+#          systemctl --user daemon-reload && systemctl --user enable --now claude-call.service
+# CALL_INPUT_DEVICE=pipewire fixed an "Invalid sample rate" crash on a laptop whose default
+# ALSA device doesn't support 16kHz directly — if your mic works fine without it, drop the line.
+# `.claude-call/.env` (CALL_LANG, CALL_WAKE, CALL_MAX_PER_HOUR, ...) still applies as normal.
+[Unit]
+Description=claude-call voice assistant (assistant mode, wake-word)
+After=pipewire.service pipewire-pulse.service
+
+[Service]
+Type=simple
+WorkingDirectory=%h/claude-call-workdir
+Environment=CALL_CONTINUE=0
+Environment=CALL_INPUT_DEVICE=pipewire
+ExecStart=%h/.local/bin/claude-call
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
