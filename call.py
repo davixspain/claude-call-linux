@@ -45,6 +45,7 @@ _FILLERS = {
     "en": ["One sec.", "Hold on.", "Let me check.", "Give me a moment."],
     "pt": ["Peraí.", "Deixa eu ver.", "Um segundo.", "Já te falo."],
     "es": ["Un momento.", "Déjame ver.", "Espera.", "Ya te digo."],
+    "it": ["Un attimo.", "Fammi controllare.", "Aspetta.", "Ci penso."],
 }
 
 # Frase falada quando o watchdog recupera de um travamento (recomeço fresh).

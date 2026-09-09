@@ -586,6 +586,15 @@ class ClaudeBrain(FrameProcessor):
         if words:
             self._recent_speech.append((time.monotonic(), words))
 
+    _JUNK_RE = re.compile(r'^[\[\(\*].{0,40}[\]\)\*]$')
+
+    def _is_junk(self, text: str) -> bool:
+        """Trascrizioni-spazzatura di whisper (tag non-parlato tipo '[Musica]',
+        '(música)', '*risata*') non devono mai contare come comando, nemmeno
+        dentro la finestra attiva del wake-word — altrimenti rumore/musica di
+        sottofondo genera turni a caso."""
+        return bool(self._JUNK_RE.match(text.strip()))
+
     def _is_echo(self, text: str) -> bool:
         """True se o 'ouvido' é a propria voz dela voltando pelo alto-falante.
         Compara com o que ela falou nos ultimos ~8s (sobreposicao de palavras)."""
@@ -823,6 +832,9 @@ class ClaudeBrain(FrameProcessor):
                 return
             if self._is_echo(text):       # a propria voz dela voltando pelo alto-falante
                 logger.debug(f"[brain] eco ignorado: {text!r}")
+                return
+            if self._is_junk(text):
+                logger.debug(f"[brain] junk STT ignorado: {text!r}")
                 return
             if not self._should_answer(text):
                 logger.debug(f"[brain] gated (sem '{'/'.join(self._wake)}'): {text!r}")
